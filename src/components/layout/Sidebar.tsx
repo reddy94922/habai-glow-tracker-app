@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/AuthProvider";
+import { Link, useLocation } from "react-router-dom";
 import {
   Home,
   BarChart2,
@@ -20,11 +21,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface NavItemProps {
   icon: React.ElementType;
   label: string;
+  to: string;
   active?: boolean;
   onClick?: () => void;
 }
 
-const NavItem = ({ icon: Icon, label, active, onClick }: NavItemProps) => {
+const NavItem = ({ icon: Icon, label, to, active, onClick }: NavItemProps) => {
   return (
     <li>
       <Button
@@ -37,29 +39,36 @@ const NavItem = ({ icon: Icon, label, active, onClick }: NavItemProps) => {
             ? "bg-neon-lime/10 text-neon-lime border-l-2 border-neon-lime"
             : "text-gray-400 hover:bg-gray-800/50 hover:text-gray-200"
         )}
+        asChild
       >
-        <Icon size={20} />
-        <span>{label}</span>
+        <Link to={to}>
+          <Icon size={20} />
+          <span>{label}</span>
+        </Link>
       </Button>
     </li>
   );
 };
 
 interface SidebarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  activeTab?: string;
+  setActiveTab?: (tab: string) => void;
   isMobileOpen: boolean;
   setIsMobileOpen: (open: boolean) => void;
 }
 
-const Sidebar = ({ activeTab, setActiveTab, isMobileOpen, setIsMobileOpen }: SidebarProps) => {
+const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const isMobile = useIsMobile();
+  const location = useLocation();
 
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
+  const handleTabChange = () => {
     if (isMobile) setIsMobileOpen(false);
+  };
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
 
   const sidebar = (
@@ -122,26 +131,30 @@ const Sidebar = ({ activeTab, setActiveTab, isMobileOpen, setIsMobileOpen }: Sid
           <NavItem 
             icon={LayoutDashboard} 
             label="Overview" 
-            active={activeTab === "overview"} 
-            onClick={() => handleTabChange("overview")}
+            to="/"
+            active={isActive("/")} 
+            onClick={handleTabChange}
           />
           <NavItem 
             icon={MessageSquare} 
             label="HabAI Coach" 
-            active={activeTab === "habai"} 
-            onClick={() => handleTabChange("habai")}
+            to="/habai"
+            active={isActive("/habai")} 
+            onClick={handleTabChange}
           />
           <NavItem 
             icon={BarChart2} 
             label="Reports" 
-            active={activeTab === "reports"} 
-            onClick={() => handleTabChange("reports")}
+            to="/reports"
+            active={isActive("/reports")} 
+            onClick={handleTabChange}
           />
           <NavItem 
             icon={Calendar} 
             label="Planner" 
-            active={activeTab === "planner"} 
-            onClick={() => handleTabChange("planner")}
+            to="/planner"
+            active={isActive("/planner")} 
+            onClick={handleTabChange}
           />
         </ul>
       </nav>
@@ -152,14 +165,21 @@ const Sidebar = ({ activeTab, setActiveTab, isMobileOpen, setIsMobileOpen }: Sid
           <NavItem 
             icon={Settings} 
             label="Settings" 
-            active={activeTab === "settings"} 
-            onClick={() => handleTabChange("settings")}
+            to="/settings"
+            active={isActive("/settings")} 
+            onClick={handleTabChange}
           />
-          <NavItem 
-            icon={LogOut} 
-            label="Logout" 
-            onClick={logout}
-          />
+          <li>
+            <Button
+              variant="ghost"
+              size="lg"
+              onClick={logout}
+              className="w-full justify-start gap-3 text-base font-normal text-gray-400 hover:bg-gray-800/50 hover:text-gray-200"
+            >
+              <LogOut size={20} />
+              <span>Logout</span>
+            </Button>
+          </li>
         </ul>
       </div>
     </div>

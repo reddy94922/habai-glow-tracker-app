@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/providers/AuthProvider";
-import Sidebar from "@/components/layout/Sidebar";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import StatCard from "@/components/dashboard/StatCard";
 import HabitCard from "@/components/dashboard/HabitCard";
 import StreakTracker from "@/components/dashboard/StreakTracker";
@@ -15,8 +15,6 @@ import { toast } from "sonner";
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("overview");
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
   
   // Helper functions
   const getCurrentGreeting = () => {
@@ -31,103 +29,82 @@ const Dashboard = () => {
     toast.info(`Opening ${cardName} details...`);
   };
 
+  const title = `${getCurrentGreeting()}, ${user?.name}! 👋`;
+  const description = "Here's an overview of your habits and progress.";
+
   return (
-    <div className="flex h-screen bg-dark overflow-hidden">
-      <Sidebar 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        isMobileOpen={isMobileOpen} 
-        setIsMobileOpen={setIsMobileOpen} 
-      />
-      
-      <div className="flex-1 overflow-y-auto">
-        {/* Main Content */}
-        <main className="px-4 sm:px-6 lg:px-8 py-6 pb-24">
-          <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <header className="mb-8">
-              <h1 className="text-2xl font-bold text-white mb-2">
-                {getCurrentGreeting()}, {user?.name}! 👋
-              </h1>
-              <p className="text-gray-400">
-                Here's an overview of your habits and progress.
-              </p>
-            </header>
-            
-            {/* Stats Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <StatCard
-                title="Total Habits"
-                value="4"
-                icon={<ListChecks size={24} />}
-                description="2 due today"
-                onClick={() => handleCardClick("Total Habits")}
-              />
-              
-              <StatCard
-                title="Current Streak"
-                value="7 days"
-                icon={<Flame size={24} />}
-                trend={{ value: 12, isPositive: true }}
-                onClick={() => handleCardClick("Streak")}
-              />
-              
-              <StatCard
-                title="This Week"
-                value="15/20"
-                icon={<CalendarCheck2 size={24} />}
-                description="75% completion"
-                onClick={() => handleCardClick("Weekly Progress")}
-              />
-              
-              <StatCard
-                title="Consistency"
-                value="85%"
-                icon={<TrendingUp size={24} />}
-                trend={{ value: 7, isPositive: true }}
-                onClick={() => handleCardClick("Consistency")}
-              />
-            </div>
-            
-            {/* Habits Row */}
-            <h2 className="text-xl font-medium text-white mb-4">Your Habits</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              {mockHabits.map((habit) => (
-                <HabitCard
-                  key={habit.id}
-                  habit={habit}
-                  onClick={() => handleCardClick(habit.name)}
-                />
-              ))}
-            </div>
-            
-            {/* Dashboard Components */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              <StreakTracker
-                className="md:col-span-2 lg:col-span-1"
-                onClick={() => handleCardClick("Streak Tracker")}
-              />
-              <HeatmapCard
-                className="md:col-span-2 lg:col-span-1"
-                onClick={() => handleCardClick("Heatmap")}
-              />
-              <EngagementChart
-                className="md:col-span-2 lg:col-span-1"
-                onClick={() => handleCardClick("Engagement Chart")}
-              />
-              <AiSuggestionCard
-                className="md:col-span-1"
-                onClick={() => handleCardClick("AI Suggestions")}
-              />
-              <MessagesCard
-                className="md:col-span-1"
-                onClick={() => handleCardClick("Messages")}
-              />
-            </div>
-          </div>
-        </main>
+    <DashboardLayout title={title} description={description}>
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard
+          title="Total Habits"
+          value="4"
+          icon={<ListChecks size={24} />}
+          description="2 due today"
+          onClick={() => handleCardClick("Total Habits")}
+        />
+        
+        <StatCard
+          title="Current Streak"
+          value="7 days"
+          icon={<Flame size={24} />}
+          trend={{ value: 12, isPositive: true }}
+          onClick={() => handleCardClick("Streak")}
+        />
+        
+        <StatCard
+          title="This Week"
+          value="15/20"
+          icon={<CalendarCheck2 size={24} />}
+          description="75% completion"
+          onClick={() => handleCardClick("Weekly Progress")}
+        />
+        
+        <StatCard
+          title="Consistency"
+          value="85%"
+          icon={<TrendingUp size={24} />}
+          trend={{ value: 7, isPositive: true }}
+          onClick={() => handleCardClick("Consistency")}
+        />
       </div>
-    </div>
+      
+      {/* Habits Row */}
+      <h2 className="text-xl font-medium text-white mb-4">Your Habits</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {mockHabits.map((habit) => (
+          <HabitCard
+            key={habit.id}
+            habit={habit}
+            onClick={() => handleCardClick(habit.name)}
+          />
+        ))}
+      </div>
+      
+      {/* Dashboard Components */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <StreakTracker
+          className="md:col-span-2 lg:col-span-1"
+          onClick={() => handleCardClick("Streak Tracker")}
+        />
+        <HeatmapCard
+          className="md:col-span-2 lg:col-span-1"
+          onClick={() => handleCardClick("Heatmap")}
+        />
+        <EngagementChart
+          className="md:col-span-2 lg:col-span-1"
+          onClick={() => handleCardClick("Engagement Chart")}
+        />
+        <AiSuggestionCard
+          className="md:col-span-1"
+          onClick={() => handleCardClick("AI Suggestions")}
+        />
+        <MessagesCard
+          className="md:col-span-1"
+          onClick={() => handleCardClick("Messages")}
+        />
+      </div>
+    </DashboardLayout>
   );
 };
 
