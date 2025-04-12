@@ -46,7 +46,7 @@ const HabitCard = ({ habit, onClick }: HabitCardProps) => {
           <Progress 
             value={habit.completionRate} 
             className="h-1.5 bg-gray-700"
-            indicatorClassName={`bg-[${habit.color}]`}
+            indicatorClassName="bg-neon-lime"
           />
           
           <div className="flex items-center mt-4">
