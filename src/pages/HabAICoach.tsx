@@ -4,7 +4,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Copy, ArrowUp, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Send, Copy, ArrowUp, ThumbsUp, ThumbsDown, Bot } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -29,15 +29,9 @@ const HabAICoach = () => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [apiKey, setApiKey] = useState<string | null>(localStorage.getItem("openai_api_key"));
+  const [showApiKeyInput, setShowApiKeyInput] = useState(!apiKey);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Mock responses for different questions
-  const mockResponses: Record<string, string> = {
-    journal: "Journaling is most effective when done consistently, either in the morning or evening. Based on your activity patterns, I'd suggest journaling in the evening around 9 PM when your energy is still good but you're starting to wind down. Try setting a 10-minute timer and keeping your journal visible on your nightstand as a reminder.",
-    workout: "Looking at your activity data, your most consistent workout days are Tuesday, Thursday, and Saturday mornings. Your completion rate is highest when you exercise before noon. I'd suggest scheduling your workouts between 7-9 AM on those days for optimal consistency.",
-    water: "You've been doing great with your hydration habit lately! Your completion rate has increased by 27% in the last two weeks, and you're now averaging 7 glasses per day. Keep it up, and consider using your water tracking habit as an anchor for other habits you want to build.",
-    meditation: "For meditation, starting with just 5 minutes daily is ideal. Based on your schedule, I notice you have a 15-minute gap between your morning routine and work start time. This would be perfect for a quick meditation session to center yourself before the day begins.",
-  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -47,7 +41,14 @@ const HabAICoach = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = (e: React.FormEvent) => {
+  const saveApiKey = (key: string) => {
+    localStorage.setItem("openai_api_key", key);
+    setApiKey(key);
+    setShowApiKeyInput(false);
+    toast.success("API key saved successfully!");
+  };
+
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
@@ -62,33 +63,90 @@ const HabAICoach = () => {
     setInput("");
     setIsTyping(true);
 
-    // Simulate AI response after a delay
-    setTimeout(() => {
-      let response: string = "";
-
-      // Check for relevant keywords in the user's message
-      const lowercaseInput = input.toLowerCase();
-      if (lowercaseInput.includes("journal")) {
-        response = mockResponses.journal;
-      } else if (lowercaseInput.includes("workout") || lowercaseInput.includes("exercise")) {
-        response = mockResponses.workout;
-      } else if (lowercaseInput.includes("water") || lowercaseInput.includes("hydration")) {
-        response = mockResponses.water;
-      } else if (lowercaseInput.includes("meditate") || lowercaseInput.includes("meditation")) {
-        response = mockResponses.meditation;
-      } else {
-        response = "I'm here to help you with your habits! Could you tell me more about what specific habit you're working on, or what area you'd like guidance with?";
+    try {
+      // Check if API key exists
+      if (!apiKey) {
+        setIsTyping(false);
+        setShowApiKeyInput(true);
+        toast.error("Please add your OpenAI API key to continue");
+        return;
       }
 
+      // Get user's previous habits data and metrics to provide context
+      const userContext = `
+        The user has been tracking the following habits:
+        - Morning Meditation (75% completion rate)
+        - Daily Exercise (60% completion rate)
+        - Water Intake (85% completion rate)
+        - Reading (40% completion rate)
+        
+        Their current streak is 7 days.
+        Their overall consistency is 65%.
+      `;
+
+      // Prepare the conversation history for context
+      const recentMessages = messages.slice(-6).map(msg => ({
+        role: msg.sender === "user" ? "user" : "assistant",
+        content: msg.text
+      }));
+
+      // Send to OpenAI API
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: `You are HabAI Coach, an AI habit coach. Your goal is to help users build and maintain healthy habits.
+              You're encouraging, understanding, but also hold users accountable.
+              Keep responses conversational and focused on habit-building.
+              Use the following context about the user's habits: ${userContext}`
+            },
+            ...recentMessages,
+            {
+              role: "user",
+              content: input,
+            },
+          ],
+          max_tokens: 1000,
+          temperature: 0.7,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || "Error connecting to OpenAI API");
+      }
+
+      const data = await response.json();
+      const aiResponse = data.choices[0].message.content;
+
+      // Add AI response
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         sender: "ai",
-        text: response,
+        text: aiResponse,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error("Error:", error);
+      // Add error message
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        sender: "ai",
+        text: `Sorry, I encountered an error while processing your request. ${error instanceof Error ? error.message : "Please try again later."}`,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const handleCopyMessage = (text: string) => {
@@ -110,6 +168,49 @@ const HabAICoach = () => {
       description="Your personal AI habit coach. Ask me anything about building and maintaining healthy habits."
     >
       <div className="flex flex-col h-[calc(100vh-13rem)] bg-dark max-w-4xl mx-auto">
+        {/* API Key Input Modal */}
+        {showApiKeyInput && (
+          <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-10 p-4">
+            <div className="bg-dark-secondary rounded-lg p-6 w-full max-w-md border border-neon-lime/30 shadow-[0_0_15px_rgba(204,255,153,0.15)]">
+              <div className="flex items-center mb-4 gap-2">
+                <Bot className="w-6 h-6 text-neon-lime" />
+                <h3 className="text-xl font-medium text-white">Connect to OpenAI</h3>
+              </div>
+              <p className="text-gray-400 mb-4">
+                To use HabAI Coach, please provide your OpenAI API key. This will be stored locally on your device.
+              </p>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const key = formData.get("apiKey") as string;
+                if (key) saveApiKey(key);
+              }}>
+                <Input 
+                  name="apiKey"
+                  type="password"
+                  placeholder="Enter your OpenAI API key" 
+                  className="bg-dark-secondary border-gray-700 mb-4 text-white"
+                />
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="border-gray-700 text-gray-400 hover:text-white"
+                    onClick={() => setShowApiKeyInput(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit"
+                    className="bg-neon-lime hover:bg-neon-lime/80 text-gray-900"
+                  >
+                    Save API Key
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* Chat Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           {messages.map((message) => (
@@ -227,9 +328,23 @@ const HabAICoach = () => {
               <span className="sr-only">Send</span>
             </Button>
           </form>
-          <p className="text-xs text-gray-500 mt-2">
-            HabAI will simulate responses based on your habit data.
-          </p>
+          <div className="flex justify-between items-center mt-2">
+            <p className="text-xs text-gray-500">
+              {apiKey 
+                ? "Connected to OpenAI API" 
+                : "API key needed for intelligent responses"}
+            </p>
+            {apiKey && (
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="text-xs text-gray-400 hover:text-neon-lime p-0 h-auto"
+                onClick={() => setShowApiKeyInput(true)}
+              >
+                Change API Key
+              </Button>
+            )}
+          </div>
         </div>
         
         {/* Scroll To Top Button */}
