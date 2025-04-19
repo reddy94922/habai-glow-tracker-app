@@ -29,7 +29,7 @@ const HabAICoach = () => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [apiKey, setApiKey] = useState<string | null>(localStorage.getItem("openai_api_key"));
+  const [apiKey, setApiKey] = useState<string | null>(localStorage.getItem("gemini_api_key"));
   const [showApiKeyInput, setShowApiKeyInput] = useState(!apiKey);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -42,10 +42,10 @@ const HabAICoach = () => {
   }, [messages]);
 
   const saveApiKey = (key: string) => {
-    localStorage.setItem("openai_api_key", key);
+    localStorage.setItem("gemini_api_key", key);
     setApiKey(key);
     setShowApiKeyInput(false);
-    toast.success("API key saved successfully!");
+    toast.success("Gemini API key saved successfully!");
   };
 
   const handleSend = async (e: React.FormEvent) => {
@@ -68,7 +68,7 @@ const HabAICoach = () => {
       if (!apiKey) {
         setIsTyping(false);
         setShowApiKeyInput(true);
-        toast.error("Please add your OpenAI API key to continue");
+        toast.error("Please add your Gemini API key to continue");
         return;
       }
 
@@ -86,45 +86,46 @@ const HabAICoach = () => {
 
       // Prepare the conversation history for context
       const recentMessages = messages.slice(-6).map(msg => ({
-        role: msg.sender === "user" ? "user" : "assistant",
-        content: msg.text
+        role: msg.sender === "user" ? "user" : "model",
+        parts: [{ text: msg.text }]
       }));
 
-      // Send to OpenAI API
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      // Send to Gemini API
+      const response = await fetch("https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
+          "x-goog-api-key": apiKey
         },
         body: JSON.stringify({
-          model: "gpt-4o",
-          messages: [
+          contents: [
             {
-              role: "system",
-              content: `You are HabAI Coach, an AI habit coach. Your goal is to help users build and maintain healthy habits.
+              role: "user",
+              parts: [{ text: `You are HabAI Coach, an AI habit coach. Your goal is to help users build and maintain healthy habits.
               You're encouraging, understanding, but also hold users accountable.
               Keep responses conversational and focused on habit-building.
-              Use the following context about the user's habits: ${userContext}`
+              Use the following context about the user's habits: ${userContext}` }]
             },
             ...recentMessages,
             {
               role: "user",
-              content: input,
-            },
+              parts: [{ text: input }]
+            }
           ],
-          max_tokens: 1000,
-          temperature: 0.7,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1000,
+          }
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error?.message || "Error connecting to OpenAI API");
+        throw new Error(errorData.error?.message || "Error connecting to Gemini API");
       }
 
       const data = await response.json();
-      const aiResponse = data.choices[0].message.content;
+      const aiResponse = data.candidates[0].content.parts[0].text;
 
       // Add AI response
       const aiMessage: Message = {
@@ -174,10 +175,10 @@ const HabAICoach = () => {
             <div className="bg-dark-secondary rounded-lg p-6 w-full max-w-md border border-neon-lime/30 shadow-[0_0_15px_rgba(204,255,153,0.15)]">
               <div className="flex items-center mb-4 gap-2">
                 <Bot className="w-6 h-6 text-neon-lime" />
-                <h3 className="text-xl font-medium text-white">Connect to OpenAI</h3>
+                <h3 className="text-xl font-medium text-white">Connect to Gemini</h3>
               </div>
               <p className="text-gray-400 mb-4">
-                To use HabAI Coach, please provide your OpenAI API key. This will be stored locally on your device.
+                To use HabAI Coach, please provide your Gemini API key. You can get one at <a href="https://ai.google.dev/" target="_blank" rel="noopener noreferrer" className="text-neon-lime hover:underline">https://ai.google.dev/</a>. This will be stored locally on your device.
               </p>
               <form onSubmit={(e) => {
                 e.preventDefault();
@@ -188,7 +189,7 @@ const HabAICoach = () => {
                 <Input 
                   name="apiKey"
                   type="password"
-                  placeholder="Enter your OpenAI API key" 
+                  placeholder="Enter your Gemini API key" 
                   className="bg-dark-secondary border-gray-700 mb-4 text-white"
                 />
                 <div className="flex justify-end gap-2">
@@ -331,7 +332,7 @@ const HabAICoach = () => {
           <div className="flex justify-between items-center mt-2">
             <p className="text-xs text-gray-500">
               {apiKey 
-                ? "Connected to OpenAI API" 
+                ? "Connected to Gemini API" 
                 : "API key needed for intelligent responses"}
             </p>
             {apiKey && (

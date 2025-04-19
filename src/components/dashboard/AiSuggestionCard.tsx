@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { aiSuggestions } from "@/lib/mock-data";
 import { BrainCircuit, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface AiSuggestionCardProps {
   className?: string;
@@ -15,6 +16,7 @@ interface AiSuggestionCardProps {
 const AiSuggestionCard = ({ className, onClick }: AiSuggestionCardProps) => {
   const [currentSuggestion, setCurrentSuggestion] = useState(0);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   
   const handleRefresh = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -38,12 +40,19 @@ const AiSuggestionCard = ({ className, onClick }: AiSuggestionCardProps) => {
       : "Thanks for your feedback! We'll refine our suggestions.");
   };
   
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (onClick) {
+      onClick();
+    } else {
+      navigate('/habai');
+    }
+  };
+  
   return (
     <Card
-      onClick={onClick}
+      onClick={handleCardClick}
       className={cn(
-        "glassmorphism p-5 card-hover",
-        onClick && "cursor-pointer",
+        "glassmorphism p-5 card-hover cursor-pointer",
         className
       )}
     >

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { mockMessages } from "@/lib/mock-data";
 import { MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface MessagesCardProps {
   className?: string;
@@ -11,6 +12,8 @@ interface MessagesCardProps {
 }
 
 const MessagesCard = ({ className, onClick }: MessagesCardProps) => {
+  const navigate = useNavigate();
+  
   const formatMessageTime = (date: Date) => {
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (60 * 60 * 1000));
@@ -27,14 +30,14 @@ const MessagesCard = ({ className, onClick }: MessagesCardProps) => {
   const handleOpenMessage = (e: React.MouseEvent) => {
     e.stopPropagation();
     toast.success("Opening chat with HabAI...");
+    navigate('/habai');
   };
   
   return (
     <Card
-      onClick={onClick}
+      onClick={onClick || handleOpenMessage}
       className={cn(
-        "glassmorphism p-5 card-hover",
-        onClick && "cursor-pointer",
+        "glassmorphism p-5 card-hover cursor-pointer",
         className
       )}
     >
