@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types/database.types";
 
 interface AuthContextType {
@@ -112,32 +112,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       
-      // Special handling for demo account
-      if (email === "demo@example.com" && password === "password") {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email, 
-          password
-        });
-        
-        if (error) throw error;
-        
-        toast.success("Logged in successfully");
-        return true;
-      }
-      
-      // Regular login
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
-      if (error) throw error;
+      if (error) {
+        // Handle specific error cases
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error("Invalid email or password. Please try again.");
+        } else if (error.message.includes('Email not confirmed')) {
+          toast.error("Please verify your email before logging in.");
+        } else {
+          toast.error(error.message || "Login failed");
+        }
+        return false;
+      }
       
       toast.success("Logged in successfully");
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
-      toast.error("Login failed. Please check your credentials.");
+      toast.error(error.message || "Login failed");
       return false;
     } finally {
       setLoading(false);
@@ -149,36 +145,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       
-      // Register the user
+      // Register the user with auto-confirm enabled for testing
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          // Enable this for development to auto-confirm emails
+          emailRedirectTo: window.location.origin,
+          data: {
+            name
+          }
+        }
       });
       
-      if (error) throw error;
-      
-      if (data.user) {
-        // Create a profile for the new user
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            { 
-              id: data.user.id, 
-              name,
-              avatar_url: `https://api.dicebear.com/7.x/personas/svg?seed=${email}`,
-              joined_date: new Date().toISOString()
-            }
-          ]);
-        
-        if (profileError) {
-          console.error("Error creating user profile:", profileError);
-          toast.error("Account created but profile setup failed");
-          return false;
-        }
+      if (error) {
+        toast.error(error.message || "Registration failed");
+        return false;
       }
       
-      toast.success("Account created successfully");
-      return true;
+      // Create a profile for the new user if signup was successful
+      if (data.user) {
+        try {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([
+              { 
+                id: data.user.id, 
+                name,
+                avatar_url: `https://api.dicebear.com/7.x/personas/svg?seed=${email}`,
+                joined_date: new Date().toISOString()
+              }
+            ]);
+          
+          if (profileError) {
+            console.error("Error creating user profile:", profileError);
+            toast.error("Account created but profile setup failed");
+          }
+        } catch (profileError: any) {
+          console.error("Error creating user profile:", profileError);
+        }
+        
+        toast.success("Account created! Please check your email to confirm your account.");
+        return true;
+      }
+      
+      return false;
     } catch (error: any) {
       console.error("Registration error:", error);
       toast.error(error.message || "Registration failed");

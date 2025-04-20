@@ -46,8 +46,14 @@ const Register = () => {
     try {
       const success = await register(email, password, name);
       if (success) {
-        navigate("/");
+        // Delay redirect to allow user to see success message
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
       }
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast.error(error.message || "Registration failed");
     } finally {
       setIsLoading(false);
     }

@@ -36,6 +36,9 @@ const Login = () => {
       if (success) {
         navigate("/");
       }
+    } catch (error: any) {
+      console.error("Login submission error:", error);
+      toast.error(error.message || "An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -43,11 +46,17 @@ const Login = () => {
 
   const handleDemoLogin = async () => {
     setIsLoading(true);
+    setEmail("demo@example.com");
+    setPassword("password");
+    
     try {
       const success = await login("demo@example.com", "password");
       if (success) {
         navigate("/");
       }
+    } catch (error: any) {
+      console.error("Demo login error:", error);
+      toast.error("Demo login failed. Please try again later.");
     } finally {
       setIsLoading(false);
     }
