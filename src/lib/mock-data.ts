@@ -69,24 +69,27 @@ export const weeklyHeatmapData = [
 export const mockMessages = [
   {
     id: "1",
+    user_id: "mock-user-id",
     text: "Great job on your meditation streak! You're on day 7! 🧘‍♂️",
-    sender: "HabAI",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60),
-    read: true
+    is_user: false,
+    read: true,
+    created_at: new Date(Date.now() - 1000 * 60 * 60).toISOString()
   },
   {
     id: "2",
+    user_id: "mock-user-id",
     text: "I've noticed you've been completing your evening run earlier. This is good for better sleep! 🏃‍♂️",
-    sender: "HabAI",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
-    read: true
+    is_user: false,
+    read: true,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
   },
   {
     id: "3",
+    user_id: "mock-user-id",
     text: "You missed your reading goal yesterday. Would you like to reschedule it? 📚",
-    sender: "HabAI",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48),
-    read: false
+    is_user: false,
+    read: false,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString()
   }
 ];
 

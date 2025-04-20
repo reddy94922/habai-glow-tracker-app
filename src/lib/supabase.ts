@@ -1,9 +1,9 @@
 
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 
 // Define fallback values for development/testing
-const FALLBACK_URL = 'https://your-supabase-project-id.supabase.co';
-const FALLBACK_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
+const FALLBACK_URL = 'https://hvizhodhphttndvawcmi.supabase.co';
+const FALLBACK_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2aXpob2RocGh0dG5kdmF3Y21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMjQ0MDMsImV4cCI6MjA2MDcwMDQwM30.akG0uom9a04t3rfzwpW17Gq0EmXdinU8Tfm8T2uNsxM';
 
 // Use environment variables if available, otherwise use fallbacks
 // For production, always use environment variables
