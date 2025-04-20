@@ -9,7 +9,143 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      habit_logs: {
+        Row: {
+          completed_date: string
+          created_at: string
+          habit_id: string
+          id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_date: string
+          created_at?: string
+          habit_id: string
+          id?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_date?: string
+          created_at?: string
+          habit_id?: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_logs_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          frequency: string[]
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          last_completed: string | null
+          name: string
+          reminder: boolean | null
+          streak: number | null
+          time_of_day: string | null
+          total_completions: number | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          frequency: string[]
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_completed?: string | null
+          name: string
+          reminder?: boolean | null
+          streak?: number | null
+          time_of_day?: string | null
+          total_completions?: number | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          frequency?: string[]
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_completed?: string | null
+          name?: string
+          reminder?: boolean | null
+          streak?: number | null
+          time_of_day?: string | null
+          total_completions?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_user: boolean | null
+          read: boolean | null
+          text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_user?: boolean | null
+          read?: boolean | null
+          text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_user?: boolean | null
+          read?: boolean | null
+          text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          id: string
+          joined_date: string | null
+          last_active: string | null
+          name: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          id: string
+          joined_date?: string | null
+          last_active?: string | null
+          name?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          id?: string
+          joined_date?: string | null
+          last_active?: string | null
+          name?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
